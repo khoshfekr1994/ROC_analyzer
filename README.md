@@ -56,13 +56,11 @@ install.packages(c("shiny", "pROC", "ggplot2", "dplyr", "readxl"))
 ```
 
 ### Running the Application
-```r
-# Save the code as app.R and run:
-shiny::runApp()
+To run the app, open the app in RStudio and:
+- **Mac**: Press `Shift+Command+S`
+- **Windows**: Press `Ctrl+Shift+S`
 
-# Or run directly:
-source("app.R")
-```
+Alternatively, you can click the "Run App" button that appears at the top of the script editor when you have a Shiny app file open.
 
 ---
 

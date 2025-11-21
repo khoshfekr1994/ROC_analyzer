@@ -1,3 +1,19 @@
+# HANASH LAB - RODEO ROC CURVE ANALYZER
+# Created by Hamid Khoshfekr Rudsari & Ehsan Irajizad, MD Anderson Cancer Center
+# Last Update: November, 2025
+# For any questions or issues, please contact: hkhoshfekr@mdanderson.org
+
+# Function to check and install required packages
+required_packages <- c("shiny", "pROC", "ggplot2", "dplyr", "readxl")
+
+for (package in required_packages) {
+  if (!require(package, character.only = TRUE, quietly = TRUE)) {
+    message(paste("Installing package:", package))
+    install.packages(package, dependencies = TRUE)
+    library(package, character.only = TRUE)
+  }
+}
+
 library(shiny)
 library(pROC)
 library(ggplot2)

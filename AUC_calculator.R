@@ -22,12 +22,17 @@ library(readxl)
 
 ui <- fluidPage(
   titlePanel(
-    div(
-      h2("RODEO ROC Curve Analyzer"),
-      h4("Hanash Lab", style = "color: gray; font-weight: normal;"),
-      h4("Created by Biostat team:", style = "color: gray; font-weight: normal;"),
-      h4("Hamid Khoshfekr Rudsari & Ehsan Irajizad, MD Anderson Cancer Center", style = "color: gray; font-weight: normal;"),
-      h4("Last Update: November, 2025", style = "color: gray; font-weight: normal;")
+    div(style = "padding-bottom: 20px;",
+      h1("RODEO ROC Curve Analyzer", 
+         style = "color: #003366; font-weight: bold; margin-bottom: 10px;"),
+      h3("Hanash Lab", 
+         style = "color: #555555; font-weight: 600; margin-top: 5px; margin-bottom: 5px;"),
+      h5("Biostatistics Team: Hamid Khoshfekr Rudsari & Ehsan Irajizad", 
+         style = "color: #777777; font-weight: normal; margin-top: 5px; margin-bottom: 5px;"),
+      h5("MD Anderson Cancer Center", 
+         style = "color: #777777; font-weight: normal; margin-top: 0px; margin-bottom: 5px;"),
+      h6("Last Updated: November 2025", 
+         style = "color: #999999; font-style: italic; margin-top: 5px;")
     )
   ),
   

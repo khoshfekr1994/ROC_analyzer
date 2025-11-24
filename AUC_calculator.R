@@ -4,7 +4,7 @@
 # For any questions or issues, please contact: hkhoshfekr@mdanderson.org
 
 # Function to check and install required packages
-required_packages <- c("shiny", "pROC", "ggplot2", "dplyr", "readxl")
+required_packages <- c("shiny", "pROC", "ggplot2", "dplyr", "readxl", "openxlsx")
 
 for (package in required_packages) {
   if (!require(package, character.only = TRUE, quietly = TRUE)) {
@@ -19,6 +19,7 @@ library(pROC)
 library(ggplot2)
 library(dplyr)
 library(readxl)
+library(openxlsx)
 
 ui <- fluidPage(
   titlePanel(
@@ -66,6 +67,9 @@ ui <- fluidPage(
       plotOutput("roc_plot", height = "600px", width = "600px"),
       br(),
       uiOutput("plot_note"),
+      br(),
+      downloadButton("download_table", "Download Table (Excel)", class = "btn-success"),
+      br(),
       br(),
       tableOutput("roc_table")
     )
@@ -442,6 +446,21 @@ server <- function(input, output, session) {
       
       ci_obj <- ci.auc(roc_obj, conf.level = 0.95)
       
+      # Calculate P-value testing if AUC is significantly different from 0.5
+      auc_value <- as.numeric(roc_obj$auc)
+      auc_var <- var(roc_obj)
+      
+      p_value <- tryCatch({
+        if(!is.na(auc_var) && auc_var > 0) {
+          z_score <- (auc_value - 0.5) / sqrt(auc_var)
+          2 * pnorm(-abs(z_score))
+        } else {
+          NA
+        }
+      }, error = function(e) {
+        NA
+      })
+      
       sens_at_spec <- sapply(spec_points, function(sp) {
         coords_obj <- coords(roc_obj, x = sp, input = "specificity", 
                             ret = "sensitivity", transpose = FALSE)
@@ -452,6 +471,7 @@ server <- function(input, output, session) {
         Marker = marker,
         N_Cases = n_cases,
         N_Controls = n_controls,
+        P_value = ifelse(is.na(p_value), NA, round(p_value, 6)),
         AUC = round(as.numeric(roc_obj$auc), 4),
         AUC_CI_Lower = round(ci_obj[1], 4),
         AUC_CI_Upper = round(ci_obj[3], 4),
@@ -535,6 +555,7 @@ server <- function(input, output, session) {
       "Marker",
       "N Cases",
       "N Controls",
+      "P-value",
       "AUC",
       "95% CI Lower",
       "95% CI Upper",
@@ -549,6 +570,36 @@ server <- function(input, output, session) {
     
     result_table
   }, rownames = FALSE, digits = 4)
+  
+  output$download_table <- downloadHandler(
+    filename = function() {
+      paste0("ROC_Analysis_Results_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".xlsx")
+    },
+    content = function(file) {
+      req(roc_results())
+      
+      result_table <- roc_results()$table
+      
+      names(result_table) <- c(
+        "Marker",
+        "N Cases",
+        "N Controls",
+        "P-value",
+        "AUC",
+        "95% CI Lower",
+        "95% CI Upper",
+        "Sens @ 60% Spec",
+        "Sens @ 70% Spec",
+        "Sens @ 80% Spec",
+        "Sens @ 86% Spec",
+        "Sens @ 90% Spec",
+        "Sens @ 95% Spec",
+        "Sens @ 98.5% Spec"
+      )
+      
+      write.xlsx(result_table, file, rowNames = FALSE)
+    }
+  )
 }
 
 shinyApp(ui = ui, server = server)

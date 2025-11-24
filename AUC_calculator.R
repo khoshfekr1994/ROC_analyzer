@@ -434,10 +434,14 @@ server <- function(input, output, session) {
       
       df_marker <- df[!is.na(df[[marker]]), ]
       
-      if(sum(df_marker$outcome == 1) == 0 || sum(df_marker$outcome == 0) == 0) next
-      
+      # Check if there are at least 2 cases and 2 controls
       n_cases <- sum(df_marker$outcome == 1)
       n_controls <- sum(df_marker$outcome == 0)
+      
+      if(n_cases < 2 || n_controls < 2) {
+        warning(paste("Skipping marker", marker, "- insufficient samples. Need at least 2 cases and 2 controls. Found:", n_cases, "cases and", n_controls, "controls."))
+        next
+      }
       
       roc_obj <- roc(df_marker$outcome, df_marker[[marker]], 
                     levels = c(0, 1), direction = "<", quiet = TRUE)
@@ -471,7 +475,7 @@ server <- function(input, output, session) {
         Marker = marker,
         N_Cases = n_cases,
         N_Controls = n_controls,
-        P_value = ifelse(is.na(p_value), NA, round(p_value, 6)),
+        P_value = ifelse(is.na(p_value), NA, round(p_value, 4)),
         AUC = round(as.numeric(roc_obj$auc), 4),
         AUC_CI_Lower = round(ci_obj[1], 4),
         AUC_CI_Upper = round(ci_obj[3], 4),

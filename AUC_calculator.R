@@ -65,6 +65,8 @@ ui <- fluidPage(
     mainPanel(
       plotOutput("roc_plot", height = "600px", width = "600px"),
       br(),
+      uiOutput("plot_note"),
+      br(),
       tableOutput("roc_table")
     )
   )
@@ -346,7 +348,21 @@ server <- function(input, output, session) {
   output$marker_selection_ui <- renderUI({
     req(filtered_data(), input$comparison_col)
     numeric_cols <- names(filtered_data())[sapply(filtered_data(), is.numeric)]
-    checkboxGroupInput("markers", "Select Markers:", choices = numeric_cols)
+    tagList(
+      actionButton("markers_select_all", "Select All", style = "margin-bottom: 5px;"),
+      actionButton("markers_deselect_all", "Deselect All", style = "margin-bottom: 10px;"),
+      checkboxGroupInput("markers", "Select Markers:", choices = numeric_cols)
+    )
+  })
+  
+  observeEvent(input$markers_select_all, {
+    req(filtered_data(), input$comparison_col)
+    numeric_cols <- names(filtered_data())[sapply(filtered_data(), is.numeric)]
+    updateCheckboxGroupInput(session, "markers", selected = numeric_cols)
+  })
+  
+  observeEvent(input$markers_deselect_all, {
+    updateCheckboxGroupInput(session, "markers", selected = character(0))
   })
   
   roc_results <- eventReactive(input$run_analysis, {
@@ -460,7 +476,11 @@ server <- function(input, output, session) {
     
     roc_objs <- roc_results()$roc_objects
     
-    colors <- rainbow(length(roc_objs))
+    # Limit to first 10 markers for plotting
+    markers_to_plot <- head(names(roc_objs), 10)
+    roc_objs_plot <- roc_objs[markers_to_plot]
+    
+    colors <- rainbow(length(roc_objs_plot))
     
     par(pty = "s")
     
@@ -475,22 +495,35 @@ server <- function(input, output, session) {
     
     grid(col = "gray90", lty = 1)
     
-    for(i in seq_along(roc_objs)) {
-      marker <- names(roc_objs)[i]
-      roc_obj <- roc_objs[[marker]]
+    for(i in seq_along(roc_objs_plot)) {
+      marker <- names(roc_objs_plot)[i]
+      roc_obj <- roc_objs_plot[[marker]]
       
       lines(1 - roc_obj$specificities, roc_obj$sensitivities,
             col = colors[i], lwd = 2.5)
     }
     
     legend("bottomright", 
-           legend = names(roc_objs),
+           legend = names(roc_objs_plot),
            col = colors,
            lwd = 2.5,
            bty = "n",
            cex = 1.1)
     
     box(lwd = 1.5)
+  })
+  
+  output$plot_note <- renderUI({
+    req(roc_results())
+    
+    roc_objs <- roc_results()$roc_objects
+    n_markers <- length(roc_objs)
+    
+    if(n_markers > 10) {
+      h5(paste("Note: Only the first 10 markers are displayed in the ROC plot. All", 
+               n_markers, "markers are included in the table below."),
+         style = "color: #d9534f; font-weight: bold;")
+    }
   })
   
   output$roc_table <- renderTable({

@@ -52,7 +52,7 @@ A Shiny application for comprehensive ROC (Receiver Operating Characteristic) cu
 
 ### Required R Packages
 ```r
-install.packages(c("shiny", "pROC", "ggplot2", "dplyr", "readxl"))
+install.packages(c("shiny", "pROC", "ggplot2", "dplyr", "readxl", "openxlsx", "rhandsontable"))
 ```
 
 ### Running the Application
